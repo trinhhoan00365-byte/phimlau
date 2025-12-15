@@ -8,16 +8,21 @@ const wrapper = document.querySelector(".player-wrapper");
 
 const video = videos.find(v => v.id === id);
 
-if (video) {
+if (!video) {
+  document.getElementById("title").textContent = "Video không tồn tại";
+} else {
   document.getElementById("title").textContent = video.title;
 
-  // HIỂN THỊ THUMBNAIL LÀM POSTER
+  // ⚠️ QUAN TRỌNG: iframe CHƯA có src
+  iframe.src = "";
+
+  // SET POSTER (THUMBNAIL)
   wrapper.style.backgroundImage = `url(${video.thumb})`;
 
   overlay.onclick = () => {
     iframe.src = video.embed;
     overlay.style.display = "none";
-    wrapper.style.backgroundImage = "none"; // bỏ poster khi chạy
+    wrapper.style.backgroundImage = "none";
   };
 }
 
