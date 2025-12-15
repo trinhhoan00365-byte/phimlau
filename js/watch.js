@@ -1,3 +1,4 @@
+const AFF_LINK = "https://go.natzus.click";
 const params = new URLSearchParams(location.search);
 const id = Number(params.get("id"));
 
