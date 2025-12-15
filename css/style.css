@@ -9,8 +9,6 @@ body {
 .header {
   background: linear-gradient(90deg,#6a5cff,#9b7bff);
   padding: 16px 24px;
-  display: flex;
-  align-items: center;
 }
 
 .logo {
@@ -25,21 +23,18 @@ body {
   width: 32px;
 }
 
-.back {
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-}
-
 /* GRID */
-.container {
+.container, .watch-container {
   padding: 24px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
   gap: 20px;
+}
+
+.grid.two-col {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .card {
@@ -51,13 +46,13 @@ body {
 
 .thumb {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16/9;
   object-fit: cover;
   display: block;
 }
 
 .card h3 {
-  padding: 12px;
+  padding: 10px;
   font-size: 14px;
 }
 
@@ -81,11 +76,7 @@ body {
   background: #6a5cff;
 }
 
-/* WATCH */
-.watch-container {
-  padding: 24px;
-}
-
+/* PLAYER */
 .player-wrapper {
   position: relative;
   width: 100%;
@@ -102,14 +93,13 @@ body {
   height: 100%;
 }
 
-/* Overlay play */
 .player-overlay {
   position: absolute;
   inset: 0;
   background: #000;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   cursor: pointer;
   z-index: 2;
 }
@@ -118,9 +108,13 @@ body {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 36px;
+}
+
+.section-title {
+  margin: 30px 0 15px;
 }
