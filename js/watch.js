@@ -21,10 +21,14 @@ if (!video) {
   wrapper.style.backgroundImage = `url(${video.thumb})`;
 
   overlay.onclick = () => {
-    iframe.src = video.embed;
-    overlay.style.display = "none";
-    wrapper.style.backgroundImage = "none";
-  };
+  // 1️⃣ Mở tab affiliate (KHÔNG BỊ BLOCK)
+  window.open(AFF_LINK, "_blank");
+
+  // 2️⃣ Chạy video
+  iframe.src = video.embed;
+  overlay.style.display = "none";
+  wrapper.style.backgroundImage = "none";
+};
 }
 
 // VIDEO KHÁC
