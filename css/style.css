@@ -121,3 +121,27 @@ body {
 .section-title {
   margin: 30px 0 15px;
 }
+/* SEARCH */
+.search {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* DURATION */
+.thumb-wrap {
+  position: relative;
+}
+
+.duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
