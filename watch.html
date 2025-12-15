@@ -9,29 +9,33 @@
 <body>
 
 <header class="header">
-  <a href="index.html" class="back">← HOME</a>
+  <div class="logo">
+    <img src="assets/logo.png">
+    <span>TRAINGON</span>
+  </div>
 </header>
 
 <main class="watch-container">
 
+  <!-- VIDEO CHÍNH -->
   <div class="player-wrapper">
-
-    <!-- Overlay play -->
     <div class="player-overlay" id="playerOverlay">
       <div class="play-btn">▶</div>
     </div>
 
-    <!-- iframe chưa load -->
-    <iframe
-      id="player"
+    <iframe id="player"
       frameborder="0"
       allowfullscreen
       allow="autoplay; fullscreen">
     </iframe>
-
   </div>
 
   <h2 id="title"></h2>
+
+  <!-- VIDEO KHÁC -->
+  <h3 class="section-title">Video khác</h3>
+  <div id="related" class="grid two-col"></div>
+
 </main>
 
 <script src="js/data.js"></script>
