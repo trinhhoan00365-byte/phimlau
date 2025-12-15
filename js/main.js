@@ -4,12 +4,12 @@ const searchInput = document.getElementById("search");
 
 const perPage = 10;
 let currentPage = 1;
-let filteredVideos = [...videos];
+let filtered = [...videos];
 
 function render() {
   grid.innerHTML = "";
   const start = (currentPage - 1) * perPage;
-  const pageVideos = filteredVideos.slice(start, start + perPage);
+  const pageVideos = filtered.slice(start, start + perPage);
 
   pageVideos.forEach(v => {
     const card = document.createElement("div");
@@ -30,7 +30,7 @@ function render() {
 
 function renderPagination() {
   pagination.innerHTML = "";
-  const total = Math.ceil(filteredVideos.length / perPage);
+  const total = Math.ceil(filtered.length / perPage);
 
   for (let i = 1; i <= total; i++) {
     const btn = document.createElement("button");
@@ -45,17 +45,10 @@ function renderPagination() {
 }
 
 searchInput.oninput = () => {
-  const keyword = searchInput.value.toLowerCase();
-  filteredVideos = videos.filter(v =>
-    v.title.toLowerCase().includes(keyword)
-  );
+  const key = searchInput.value.toLowerCase();
+  filtered = videos.filter(v => v.title.toLowerCase().includes(key));
   currentPage = 1;
   render();
 };
-
-render();    };
-    pagination.appendChild(btn);
-  }
-}
 
 render();
