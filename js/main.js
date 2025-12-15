@@ -13,12 +13,10 @@ function render() {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div class="thumb"></div>
+      <img class="thumb" src="${v.thumb}">
       <h3>${v.title}</h3>
     `;
-    card.onclick = () => {
-      location.href = `watch.html?id=${v.id}`;
-    };
+    card.onclick = () => location.href = `watch.html?id=${v.id}`;
     grid.appendChild(card);
   });
 
