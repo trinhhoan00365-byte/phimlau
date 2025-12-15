@@ -109,9 +109,11 @@ body {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  background: #000;
   border-radius: 12px;
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .player-wrapper iframe {
