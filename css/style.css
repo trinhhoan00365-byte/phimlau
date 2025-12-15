@@ -50,8 +50,10 @@ body {
 }
 
 .thumb {
-  height: 140px;
-  background: #fff;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
 }
 
 .card h3 {
