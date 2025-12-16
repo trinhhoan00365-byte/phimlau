@@ -6,40 +6,47 @@ const iframe = document.getElementById("player");
 const overlay = document.getElementById("playerOverlay");
 const related = document.getElementById("related");
 const wrapper = document.querySelector(".player-wrapper");
+const titleEl = document.getElementById("title");
+const downloadBtn = document.getElementById("downloadBtn");
+
+// LINK AFF (nếu có)
+const AFF_LINK = "https://link-affiliate-cua-ban.com";
 
 const video = videos.find(v => v.id === id);
 
 if (!video) {
-  document.getElementById("title").textContent = "Video không tồn tại";
-  const downloadBtn = document.getElementById("downloadBtn");
-
-if (video.download) {
-  downloadBtn.href = video.download;
-  downloadBtn.setAttribute("download", "");
+  titleEl.textContent = "Video không tồn tại";
+  if (downloadBtn) downloadBtn.style.display = "none";
 } else {
-  downloadBtn.style.display = "none";
-}
-} else {
-  document.getElementById("title").textContent = video.title;
+  // ===== TIÊU ĐỀ =====
+  titleEl.textContent = video.title;
 
-  // ⚠️ QUAN TRỌNG: iframe CHƯA có src
+  // ===== POSTER THUMBNAIL =====
   iframe.src = "";
-
-  // SET POSTER (THUMBNAIL)
   wrapper.style.backgroundImage = `url(${video.thumb})`;
 
-  overlay.onclick = () => {
-  // 1️⃣ Mở tab affiliate (KHÔNG BỊ BLOCK)
-  window.open(AFF_LINK, "_blank");
+  // ===== DOWNLOAD =====
+  if (video.download && downloadBtn) {
+    downloadBtn.href = video.download;
+    downloadBtn.setAttribute("download", "");
+  } else if (downloadBtn) {
+    downloadBtn.style.display = "none";
+  }
 
-  // 2️⃣ Chạy video
-  iframe.src = video.embed;
-  overlay.style.display = "none";
-  wrapper.style.backgroundImage = "none";
-};
+  // ===== PLAY VIDEO =====
+  overlay.onclick = () => {
+    // mở aff trước (nếu dùng)
+    if (AFF_LINK) {
+      window.open(AFF_LINK, "_blank");
+    }
+
+    iframe.src = video.embed;
+    overlay.style.display = "none";
+    wrapper.style.backgroundImage = "none";
+  };
 }
 
-// VIDEO KHÁC
+// ===== VIDEO KHÁC =====
 videos
   .filter(v => v.id !== id)
   .forEach(v => {
@@ -52,6 +59,8 @@ videos
       </div>
       <h3>${v.title}</h3>
     `;
-    card.onclick = () => location.href = `watch.html?id=${v.id}`;
+    card.onclick = () => {
+      location.href = "watch.html?id=" + v.id;
+    };
     related.appendChild(card);
   });
