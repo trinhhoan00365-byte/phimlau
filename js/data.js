@@ -5,6 +5,7 @@ const videos = [
     thumb: "https://sf-static.upanhlaylink.com/img/image_20251215ff9056cc6924c970929635b6c3d47cf8.jpg",
     duration: "6:21",
     embed: "https://iframe.mediadelivery.net/embed/564734/23999165-d615-430f-b741-06c5c611c9b6"
+    download: " https://luluvid.com/djwl0ssm6fou.mp4"
   },
   {
     id: 2,
