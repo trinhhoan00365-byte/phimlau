@@ -11,6 +11,14 @@ const video = videos.find(v => v.id === id);
 
 if (!video) {
   document.getElementById("title").textContent = "Video không tồn tại";
+  const downloadBtn = document.getElementById("downloadBtn");
+
+if (video.download) {
+  downloadBtn.href = video.download;
+  downloadBtn.setAttribute("download", "");
+} else {
+  downloadBtn.style.display = "none";
+}
 } else {
   document.getElementById("title").textContent = video.title;
 
