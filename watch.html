@@ -1,46 +1,143 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>Xem video</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
 
-<header class="header">
-  <a href="index.html" class="logo">
-    <img src="assets/logo.png">
-    <span>TRAINGON</span>
-  </a>
-</header>
+    /* =========================
+       CORS PREFLIGHT
+       ========================= */
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: cors() });
+    }
 
-<main class="watch-container">
+    /* =========================
+       PAGINATION REWRITE
+       /page/2 -> /index.html?page=2
+       ========================= */
+    const pageMatch = url.pathname.match(/^\/page\/(\d+)\/?$/);
+    if (pageMatch) {
+      url.pathname = "/index.html";
+      url.searchParams.set("page", pageMatch[1]);
+      return fetch(url.toString(), request);
+    }
 
-  <div class="player-wrapper">
-    <div class="player-overlay" id="playerOverlay">
-      <div class="play-btn">▶</div>
-    </div>
-    <iframe id="player"
-      frameborder="0"
-      allowfullscreen
-      allow="autoplay; fullscreen">
-    </iframe>
-  </div>
+    /* =========================
+       GET VIDEO LIST
+       ========================= */
+    if (url.pathname === "/videos") {
+      const list = await env.VIDEOS.get("list");
+      return json(list ? JSON.parse(list) : []);
+    }
 
-  <h2 id="title"></h2>
-  <div class="video-actions">
-  <a id="downloadBtn" class="download-btn" download>
-    ⬇ Tải video
-  </a>
-  </div>
+    /* =========================
+       ADD VIDEO (AUTO SLUG)
+       ========================= */
+    if (url.pathname === "/admin/add" && request.method === "POST") {
+      const { password, video } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
 
-  <h3 class="section-title">Video khác</h3>
-  <div id="related" class="grid two-col"></div>
+      const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
 
-</main>
+      // ID luôn là STRING
+      video.id = Date.now().toString();
 
-<script src="js/data.js"></script>
-<script src="js/watch.js"></script>
-</body>
-</html>
+      // ===== AUTO SLUG =====
+      let baseSlug = makeSlug(video.title || "video");
+      let slug = baseSlug;
+      let i = 1;
+
+      while (list.some(v => v.slug === slug)) {
+        slug = `${baseSlug}-${i++}`;
+      }
+
+      video.slug = slug;
+
+      list.unshift(video);
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true, slug });
+    }
+
+    /* =========================
+       EDIT VIDEO (KHÔNG ĐỔI SLUG)
+       ========================= */
+    if (url.pathname === "/admin/edit" && request.method === "POST") {
+      const { password, video } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
+
+      const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
+      const idx = list.findIndex(v => String(v.id) === String(video.id));
+      if (idx === -1) return json({ error: "Not found" }, 404);
+
+      // giữ nguyên slug
+      list[idx] = { ...list[idx], ...video, slug: list[idx].slug };
+
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true });
+    }
+
+    /* =========================
+       DELETE VIDEO
+       ========================= */
+    if (url.pathname === "/admin/delete" && request.method === "POST") {
+      const { password, id } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
+
+      let list = JSON.parse(await env.VIDEOS.get("list") || "[]");
+      list = list.filter(v => String(v.id) !== String(id));
+
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true });
+    }
+
+    /* =========================
+       VIEW COUNT
+       ========================= */
+    if (url.pathname === "/view") {
+      const id = url.searchParams.get("id");
+      const inc = url.searchParams.get("inc");
+
+      const key = "view:" + id;
+      let views = Number(await env.VIEWS.get(key) || 0);
+
+      if (inc === "1") {
+        views++;
+        await env.VIEWS.put(key, views.toString());
+      }
+
+      return json({ views });
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+};
+
+/* =========================
+   HELPERS
+   ========================= */
+function makeSlug(text) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      ...cors(),
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+function cors() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  };
+}
