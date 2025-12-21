@@ -1,35 +1,117 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>TRAINGON</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
 
-<header class="header">
-  <a href="index.html" class="logo">
-    <img src="assets/logo.png">
-    <span>TRAINGON</span>
-  </a>
-</header>
+    /* =========================
+       CORS PREFLIGHT
+       ========================= */
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: cors() });
+    }
 
-<main class="container">
+    /* =========================
+       PAGINATION REWRITE
+       /page/2 -> /index.html?page=2
+       ========================= */
+    const pageMatch = url.pathname.match(/^\/page\/(\d+)\/?$/);
+    if (pageMatch) {
+      url.pathname = "/index.html";
+      url.searchParams.set("page", pageMatch[1]);
+      return fetch(url.toString(), request);
+    }
 
-  <input
-    type="text"
-    id="search"
-    class="search"
-    placeholder="Tìm kiếm video..."
-  >
+    /* =========================
+       GET VIDEO LIST
+       ========================= */
+    if (url.pathname === "/videos") {
+      const list = await env.VIDEOS.get("list");
+      return json(list ? JSON.parse(list) : []);
+    }
 
-  <div id="video-grid" class="grid two-col"></div>
-  <div id="pagination" class="pagination"></div>
+    /* =========================
+       ADD VIDEO
+       ========================= */
+    if (url.pathname === "/admin/add" && request.method === "POST") {
+      const { password, video } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
+      
+      const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
+      video.id = Date.now();
+      list.unshift(video);
 
-</main>
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true });
+    }
 
-<script src="js/data.js"></script>
-<script src="js/main.js"></script>
-</body>
-</html>
+    /* =========================
+       EDIT VIDEO
+       ========================= */
+    if (url.pathname === "/admin/edit" && request.method === "POST") {
+      const { password, video } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
+
+      const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
+      const idx = list.findIndex(v => v.id === video.id);
+      if (idx === -1) return json({ error: "Not found" }, 404);
+
+      list[idx] = { ...list[idx], ...video };
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true });
+    }
+
+    /* =========================
+       DELETE VIDEO
+       ========================= */
+    if (url.pathname === "/admin/delete" && request.method === "POST") {
+      const { password, id } = await request.json();
+      if (password !== "11111") return json({ error: "Unauthorized" }, 401);
+
+      let list = JSON.parse(await env.VIDEOS.get("list") || "[]");
+      list = list.filter(v => v.id !== id);
+
+      await env.VIDEOS.put("list", JSON.stringify(list));
+      return json({ success: true });
+    }
+
+    /* =========================
+       VIEW COUNT
+       ========================= */
+    if (url.pathname === "/view") {
+      const id = url.searchParams.get("id");
+      const inc = url.searchParams.get("inc");
+
+      const key = "view:" + id;
+      let views = Number(await env.VIEWS.get(key) || 0);
+
+      if (inc === "1") {
+        views++;
+        await env.VIEWS.put(key, views.toString());
+      }
+
+      return json({ views });
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+};
+
+/* =========================
+   HELPERS
+   ========================= */
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      ...cors(),
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+function cors() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  };
+}
