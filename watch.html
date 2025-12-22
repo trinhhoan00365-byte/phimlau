@@ -10,13 +10,24 @@ export default {
     }
 
     /* =========================
-       PAGINATION REWRITE
+       PAGINATION
        /page/2 -> /index.html?page=2
        ========================= */
     const pageMatch = url.pathname.match(/^\/page\/(\d+)\/?$/);
     if (pageMatch) {
       url.pathname = "/index.html";
       url.searchParams.set("page", pageMatch[1]);
+      return fetch(url.toString(), request);
+    }
+
+    /* =========================
+       VIDEO SLUG ROUTE
+       /video/slug--id -> /watch.html
+       ⚠️ KHÔNG truyền slug qua query
+       ========================= */
+    const videoMatch = url.pathname.match(/^\/video\/([^\/]+)$/);
+    if (videoMatch) {
+      url.pathname = "/watch.html";
       return fetch(url.toString(), request);
     }
 
@@ -29,7 +40,7 @@ export default {
     }
 
     /* =========================
-       ADD VIDEO (AUTO SLUG)
+       ADD VIDEO
        ========================= */
     if (url.pathname === "/admin/add" && request.method === "POST") {
       const { password, video } = await request.json();
@@ -37,27 +48,28 @@ export default {
 
       const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
 
-      // ID luôn là STRING
+      // ID luôn là string
       video.id = Date.now().toString();
 
-      // ===== AUTO SLUG =====
-      let baseSlug = makeSlug(video.title || "video");
-      let slug = baseSlug;
-      let i = 1;
+      // Tạo slug tự động nếu chưa có
+      if (!video.slug && video.title) {
+        const baseSlug = video.title
+          .toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
 
-      while (list.some(v => v.slug === slug)) {
-        slug = `${baseSlug}-${i++}`;
+        video.slug = `${baseSlug}--${video.id}`;
       }
-
-      video.slug = slug;
 
       list.unshift(video);
       await env.VIDEOS.put("list", JSON.stringify(list));
-      return json({ success: true, slug });
+      return json({ success: true });
     }
 
     /* =========================
-       EDIT VIDEO (KHÔNG ĐỔI SLUG)
+       EDIT VIDEO
+       (KHÔNG tự đổi slug)
        ========================= */
     if (url.pathname === "/admin/edit" && request.method === "POST") {
       const { password, video } = await request.json();
@@ -67,9 +79,7 @@ export default {
       const idx = list.findIndex(v => String(v.id) === String(video.id));
       if (idx === -1) return json({ error: "Not found" }, 404);
 
-      // giữ nguyên slug
-      list[idx] = { ...list[idx], ...video, slug: list[idx].slug };
-
+      list[idx] = { ...list[idx], ...video };
       await env.VIDEOS.put("list", JSON.stringify(list));
       return json({ success: true });
     }
@@ -90,12 +100,15 @@ export default {
 
     /* =========================
        VIEW COUNT
+       KEY = slug--id
        ========================= */
     if (url.pathname === "/view") {
-      const id = url.searchParams.get("id");
+      const slug = url.searchParams.get("slug");
       const inc = url.searchParams.get("inc");
 
-      const key = "view:" + id;
+      if (!slug) return json({ views: 0 });
+
+      const key = "view:" + slug;
       let views = Number(await env.VIEWS.get(key) || 0);
 
       if (inc === "1") {
@@ -113,17 +126,6 @@ export default {
 /* =========================
    HELPERS
    ========================= */
-function makeSlug(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
