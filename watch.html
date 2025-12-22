@@ -21,13 +21,13 @@ export default {
     }
 
     /* =========================
-       VIDEO SLUG ROUTE
-       /video/slug--id -> /watch.html
-       ⚠️ KHÔNG truyền slug qua query
+       VIDEO SLUG ROUTE (FIX)
+       /video/slug--id -> /watch.html?slug=slug--id
        ========================= */
     const videoMatch = url.pathname.match(/^\/video\/([^\/]+)$/);
     if (videoMatch) {
       url.pathname = "/watch.html";
+      url.searchParams.set("slug", videoMatch[1]); // ⭐ QUAN TRỌNG
       return fetch(url.toString(), request);
     }
 
@@ -48,10 +48,8 @@ export default {
 
       const list = JSON.parse(await env.VIDEOS.get("list") || "[]");
 
-      // ID luôn là string
       video.id = Date.now().toString();
 
-      // Tạo slug tự động nếu chưa có
       if (!video.slug && video.title) {
         const baseSlug = video.title
           .toLowerCase()
@@ -69,7 +67,6 @@ export default {
 
     /* =========================
        EDIT VIDEO
-       (KHÔNG tự đổi slug)
        ========================= */
     if (url.pathname === "/admin/edit" && request.method === "POST") {
       const { password, video } = await request.json();
@@ -99,8 +96,7 @@ export default {
     }
 
     /* =========================
-       VIEW COUNT
-       KEY = slug--id
+       VIEW COUNT (THEO SLUG)
        ========================= */
     if (url.pathname === "/view") {
       const slug = url.searchParams.get("slug");
